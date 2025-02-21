@@ -1,6 +1,7 @@
 import pygame
 from enum import Enum
 from board import Board
+from images import Images
 
 class GameState(Enum):
     MAIN_MENU = 1
@@ -19,17 +20,20 @@ class Game:
 
         self.width = 0.7 * info.current_w;
         self.height = 0.7 * info.current_h;
-        self.level_offset = 15;
+        self.level_offset = 16;
         
         self.screen = pygame.display.set_mode((self.width, self.height))
-
         self.state = GameState.MAIN_MENU
 
         pygame.display.set_caption("Shanghai Mahjong")
 
+        self.images = Images("assets/images/")
+
         self.clock = pygame.time.Clock()
 
         self.board = Board(self, "levels/level1.txt")
+
+        self.images.resize_cards(self.board.card_width, self.board.card_height)
 
 
 
@@ -42,11 +46,16 @@ class Game:
             dt = self.clock.tick() / 1000
 
             for event in pygame.event.get():
+
                 if event.type == pygame.QUIT:
                     running = False
+                
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    self.board.handle_click()
 
             self.screen.fill((75, 89, 216))
 
+            self.board.update()
             self.board.draw()
 
             pygame.display.flip()

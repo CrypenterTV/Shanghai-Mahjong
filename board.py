@@ -18,34 +18,81 @@ class Board:
         self.height_start = 0.1 * game.height
         self.height_end = 0.9 * game.height 
 
+        self.current_card = None
+
         self.load_from_file()
         self.analyse_board()
 
         self.card_width = (self.width_end - self.width_start) / self.n_cells_X
         self.card_height = (self.height_end - self.height_start) / self.n_cells_Y
 
-        self.load_game_elemtents()
+        self.load_game_elements()
 
         print(f"n_cells_X: {self.n_cells_X}, n_cells_Y: {self.n_cells_Y}")
         print(f"card_width: {self.card_width}, card_height: {self.card_height}")
 
 
 
-
-
     def update(self):
-        pass
 
+        max_level_selected_card = None
+        cards_to_unhover = []
+
+        for card in self.cards:
+            
+            card.update()
+
+            if card.is_hovered:
+                
+                if max_level_selected_card == None:
+                    max_level_selected_card = card
+                else:
+
+                    if max_level_selected_card.level < card.level:
+                        cards_to_unhover.append(max_level_selected_card)
+                        max_level_selected_card = card
+
+                    elif max_level_selected_card.level == card.level:
+
+                        if max_level_selected_card.inside_card_side and card.inside_card:
+
+                            cards_to_unhover.append(max_level_selected_card)
+                            max_level_selected_card = card      
+                        else:
+                            card.is_hovered = False
+
+                    else:
+                        card.is_hovered = False
+        
+        for card in cards_to_unhover:
+            card.is_hovered = False
+        
+        self.current_card = max_level_selected_card
+
+
+    
     
     def draw(self):
 
         for card in self.cards:
             card.draw()
 
+    def handle_click(self):
+
+        if self.current_card == None:
+            return
+        
+        self.current_card.is_selected = not self.current_card.is_selected
+
+        if self.current_card.is_selected:
+            print(self.current_card.is_removable())
+
+
+
 
     def analyse_board(self):
 
-        assert len(self.grid) > 0 and len(self.grid[0]) > 0 and len(self.grid[0][0]) > 0
+        assert len(self.grid) > 2 and len(self.grid[0]) > 0 and len(self.grid[0][0]) > 0
 
         self.n_cells_X = len(self.grid[0][0])
         self.n_cells_Y = len(self.grid[0])
@@ -69,7 +116,8 @@ class Board:
                     raise Exception("La taille de la grille est incorrecte")
     
 
-    def load_game_elemtents(self):
+
+    def load_game_elements(self):
 
 
         for level in range(len(self.grid)):
@@ -81,7 +129,7 @@ class Board:
                     if self.grid[level][i][j] == 0:
                         continue
                    
-                    self.cards.append(Card(self, level, j, i))
+                    self.cards.append(Card(self, self.grid[level][i][j], level, j, i))
 
     
     def load_from_file(self):
@@ -98,7 +146,6 @@ class Board:
             for line in file:
 
                 line = line.strip()
-                line = line.replace(" ", "")
 
                 if line == "":
 
@@ -107,6 +154,8 @@ class Board:
                         current_2d = []
                 
                 else:
+
+                    line = line.split(" ")
 
                     current_line = []
 
@@ -118,6 +167,7 @@ class Board:
 
             if len(current_2d) > 0:
                 self.grid.append(current_2d)
+
 
 
 
