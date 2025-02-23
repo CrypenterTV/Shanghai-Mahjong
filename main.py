@@ -18,8 +18,8 @@ class Game:
 
         info = pygame.display.Info()
 
-        self.width = 0.7 * info.current_w;
-        self.height = 0.7 * info.current_h;
+        self.width = int(0.7 * info.current_w);
+        self.height = int(0.7 * info.current_h);
         self.level_offset = 16;
         
         self.screen = pygame.display.set_mode((self.width, self.height))

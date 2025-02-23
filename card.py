@@ -73,7 +73,11 @@ class Card:
         card_rect = pygame.Rect(self.coord_x, self.coord_y, self.board.card_width, self.board.card_height)
 
         if not self.is_selected:
-            pygame.draw.rect(screen, (255, 246, 81) if self.is_hovered else (255, 255, 255), card_rect, width=0, border_radius=2)
+            if self.is_removable():
+                pygame.draw.rect(screen, (0, 255, 0) if self.is_hovered else (255, 255, 255), card_rect, width=0, border_radius=2)
+            else:
+                pygame.draw.rect(screen, (255, 0, 0) if self.is_hovered else (255, 255, 255), card_rect, width=0, border_radius=2)
+            #pygame.draw.rect(screen, (255, 246, 81) if self.is_hovered else (255, 255, 255), card_rect, width=0, border_radius=2)
         else:
             pygame.draw.rect(screen, (50, 50, 255), card_rect, width=0, border_radius=2)
 
@@ -98,14 +102,50 @@ class Card:
 
     def is_removable(self):
         
-        # TODO !!
+        side_removable = False
+
+        if self.cell_x == 0:
+            side_removable = True
+        elif self.cell_x == (self.board.n_cells_X - 2 if self.is_top_level else self.board.n_cells_X - 1):
+            side_removable = True
+        elif self.board.grid[self.level][self.cell_y][self.cell_x - 1] == 0:
+            side_removable = True
+        elif self.board.grid[self.level][self.cell_y][self.cell_x + 1] == 0:
+            side_removable = True
+            
         top_removable = True
-        if not self.is_top_level:
-            for level in range(self.level + 1, len(self.board.grid)):
+
+        if self.is_top_level:
+            pass
+        
+        elif self.level == len(self.board.grid) - 2:
+
+            for card in self.board.cards:
+
+                if not card.is_top_level:
+                    continue
+                    
+                if self.cell_x == card.cell_x and self.cell_y == card.cell_y:
+                    top_removable = False
+                elif self.cell_x == card.cell_x + 1 and self.cell_y == card.cell_y:
+                    top_removable = False
+                elif self.cell_x == card.cell_x and self.cell_y == card.cell_y + 1:
+                    top_removable = False
+                elif self.cell_x == card.cell_x + 1 and self.cell_y == card.cell_y + 1:
+                    top_removable = False
+                
+                if not top_removable:
+                    break
+            
+        else:
+            
+            for level in range(self.level + 1, len(self.board.grid) - 1):
+
                 if self.board.grid[level][self.cell_y][self.cell_x] != 0:
                     top_removable = False
 
-        print(top_removable)
+        
+        return top_removable and side_removable
 
     
     
