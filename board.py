@@ -86,7 +86,7 @@ class Board:
 
         if self.current_card.is_selected:
             print(self.current_card.is_removable())
-            self.current_card.delete()
+            #self.current_card.delete()
 
 
 
