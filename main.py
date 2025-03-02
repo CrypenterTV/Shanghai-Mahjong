@@ -18,10 +18,10 @@ class Game:
 
         info = pygame.display.Info()
 
-        self.width = int(0.7 * info.current_w);
-        self.height = int(0.7 * info.current_h);
-        self.level_offset = 16;
-        
+        self.width = int(0.8 * info.current_w);
+        self.height = int(0.8 * info.current_h);
+        #self.level_offset = 16;
+        self.level_offset = 10;
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.state = GameState.MAIN_MENU
 
@@ -31,7 +31,7 @@ class Game:
 
         self.clock = pygame.time.Clock()
 
-        self.board = Board(self, "levels/level1.txt")
+        self.board = Board(self, "levels/level2.txt")
 
         self.images.resize_cards(self.board.card_width, self.board.card_height)
 

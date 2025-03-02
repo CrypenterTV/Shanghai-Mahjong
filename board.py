@@ -10,6 +10,7 @@ class Board:
         self.filename = filename
         self.grid = []
         self.cards = []
+        self.selected_cards = []
         self.n_cells_X = 0
         self.n_cells_Y = 0
 
@@ -57,7 +58,7 @@ class Board:
                         if max_level_selected_card.inside_card_side and card.inside_card:
 
                             cards_to_unhover.append(max_level_selected_card)
-                            max_level_selected_card = card      
+                            max_level_selected_card = card
                         else:
                             card.is_hovered = False
 
@@ -82,11 +83,30 @@ class Board:
         if self.current_card == None:
             return
         
-        self.current_card.is_selected = not self.current_card.is_selected
+        
+        if self.current_card.is_removable():
 
-        if self.current_card.is_selected:
             print(self.current_card.is_removable())
-            #self.current_card.delete()
+
+            if self.current_card.is_selected and self.selected_cards.__contains__(self.current_card):
+                self.current_card.is_selected = False
+                self.selected_cards.remove(self.current_card)
+            else:
+
+                if len(self.selected_cards) >= 2:
+                    return
+
+                self.current_card.is_selected = True
+                self.selected_cards.append(self.current_card)
+
+                if len(self.selected_cards) == 2:
+
+                    # Event
+                    if self.selected_cards[0].c_type == self.selected_cards[1].c_type:
+                        self.selected_cards[0].delete()
+                        self.selected_cards[1].delete()
+                        self.selected_cards.clear()
+
 
 
 

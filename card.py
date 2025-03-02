@@ -60,7 +60,6 @@ class Card:
         if self.is_expired: 
             return
 
-        #shadow_color = (219, 219, 219)
         shadow_color = (175, 138, 106)
         
         screen = self.board.game.screen
@@ -70,13 +69,17 @@ class Card:
 
         
         if not self.is_selected:
-            pygame.draw.polygon(screen, (235, 153, 14) if self.is_hovered else shadow_color, self.points, width=0)
+
+            if not self.is_removable():
+                pygame.draw.polygon(screen, shadow_color, self.points, width=0)
+            else:
+                pygame.draw.polygon(screen, (235, 153, 14) if self.is_hovered else shadow_color, self.points, width=0)
         else:
             pygame.draw.polygon(screen, (40, 96, 19), self.points, width=0)
 
 
         if not self.is_selected:
-            if self.is_hovered:
+            if self.is_hovered and self.is_removable():
                 self.draw_gradient_horizontal((255, 242, 150), (235, 153, 14), card_rect)
             else:
                 self.draw_gradient_horizontal((253, 223, 188), (175, 138, 106), card_rect)
@@ -131,7 +134,7 @@ class Card:
         if self.is_top_level:
             pass
         
-        elif self.level == len(self.board.grid) - 2:
+        else:
 
             for card in self.board.cards:
 
@@ -150,13 +153,12 @@ class Card:
                 if not top_removable:
                     break
             
-        else:
-            
-            for level in range(self.level + 1, len(self.board.grid) - 1):
+            if self.level < len(self.board.grid) - 2:
 
-                if self.board.grid[level][self.cell_y][self.cell_x] != 0:
-                    top_removable = False
+                for level in range(self.level + 1, len(self.board.grid) - 1):
 
+                    if self.board.grid[level][self.cell_y][self.cell_x] != 0:
+                        top_removable = False
         
         return top_removable and side_removable
 
