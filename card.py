@@ -20,6 +20,8 @@ class Card:
         self.inside_card = False
         self.inside_card_side = False
 
+        self.is_highlighted = False
+
         self.is_selected = False
 
         self.is_top_level = self.level == len(self.board.grid) - 1
@@ -73,7 +75,13 @@ class Card:
             if not self.is_removable():
                 pygame.draw.polygon(screen, shadow_color, self.points, width=0)
             else:
-                pygame.draw.polygon(screen, (235, 153, 14) if self.is_hovered else shadow_color, self.points, width=0)
+                if self.is_hovered:
+                    pygame.draw.polygon(screen, (235, 153, 14), self.points, width=0)
+                else:
+                    if self.is_highlighted:
+                        pygame.draw.polygon(screen, (86, 63, 112), self.points, width=0)
+                    else:
+                        pygame.draw.polygon(screen, shadow_color, self.points, width=0)
         else:
             pygame.draw.polygon(screen, (40, 96, 19), self.points, width=0)
 
@@ -82,7 +90,10 @@ class Card:
             if self.is_hovered and self.is_removable():
                 self.draw_gradient_horizontal((255, 242, 150), (235, 153, 14), card_rect)
             else:
-                self.draw_gradient_horizontal((253, 223, 188), (175, 138, 106), card_rect)
+                if self.is_highlighted:
+                    self.draw_gradient_horizontal((220, 186, 248), (86, 63, 112), card_rect)
+                else:
+                    self.draw_gradient_horizontal((253, 223, 188), (175, 138, 106), card_rect)
         else:
             self.draw_gradient_horizontal((113, 210, 89), (40, 96, 19), card_rect)
 
