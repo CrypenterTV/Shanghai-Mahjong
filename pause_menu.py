@@ -45,7 +45,7 @@ class PauseMenu:
                                    self.save_action_button))
         
         self.buttons.append(Button(self.game,
-                                   "MENU PRINCIPAL",
+                                   "RETOUR AU MENU",
                                    (234, 161, 14),
                                    self.game.width // 2,
                                    start_buttons_height + 2 * (button_spacing + button_height),

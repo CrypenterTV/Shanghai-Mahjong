@@ -13,6 +13,7 @@ class Board:
 
         self.score = 0
         self.timer = 0
+        self.remaining_shuffles = 3
         self.last_score_update = time.time()
 
         self.filename = filename
@@ -108,14 +109,30 @@ class Board:
         self.game.switch_to_pause()
 
     def shuffle_button_action(self, button):
-        print("b")
+        self.shuffle_board()
 
     def sound_button_action(self, button):
         self.game.is_muted = not self.game.is_muted
         self.buttons[2].image = self.game.images.sound_off_icon if self.game.is_muted else self.game.images.sound_on_icon
     
     def idea_button_action(self, button):
+
+        for card in self.cards:
+            if card.is_highlighted:
+                return
         
+        pairs = self.get_removable_pairs()
+
+        if len(pairs) > 0:
+            pair = random.choice(pairs)
+            pair[0].is_highlighted = True
+            pair[1].is_highlighted = True
+
+                
+    def get_removable_pairs(self):
+        
+        removable_pairs = []
+
         for c1 in self.cards:
             if not c1.is_removable():
                 continue
@@ -125,9 +142,9 @@ class Board:
                 if not c2.is_removable():
                     continue
                 if c1.c_type == c2.c_type:
-                    c1.is_highlighted = True
-                    c2.is_highlighted = True
-                    return
+                    removable_pairs.append((c1, c2))
+        
+        return removable_pairs
 
     def update(self):
 
@@ -174,6 +191,21 @@ class Board:
             self.timer += 1
             self.last_score_update = current_time
 
+    def format_timer(self):
+
+        m = self.timer // 60
+        s = self.timer % 60
+
+        m_str = str(m)
+        if m < 10:
+            m_str = "0" + m_str
+        
+        s_str = str(s)
+        if s < 10:
+            s_str = "0" + s_str
+        
+        return f"{m_str}:{s_str}"
+
 
 
     def draw_score_popup(self, surface):
@@ -195,7 +227,7 @@ class Board:
             s_str = "0" + s_str
 
         score_text = self.font.render(f"Score: {self.score}", True, (255, 255, 255))
-        time_text = self.font.render(f"Timer: {m_str}:{s_str}", True, (255, 255, 255))
+        time_text = self.font.render(f"Timer: {self.format_timer()}", True, (255, 255, 255))
 
         popup_surface.blit(score_text, (10, 10))
         popup_surface.blit(time_text, (10, 50))
@@ -247,12 +279,28 @@ class Board:
                 if len(self.selected_cards) == 2:
 
                     if self.selected_cards[0].c_type == self.selected_cards[1].c_type:
+
+                        # Paire de cartes à retirer
                         
                         self.selected_cards[0].delete()
                         self.selected_cards[1].delete()
                         self.selected_cards.clear()
 
                         self.score += 10
+
+                        removable_pairs = self.get_removable_pairs()
+
+                        if len(self.cards) == 0:
+                            self.game.switch_to_end()
+                            return
+
+                        if len(removable_pairs) == 0:
+                            
+                            if self.remaining_shuffles == 0:
+                                self.game.switch_to_end()
+                                return
+                            
+                            self.shuffle_board()
 
                     else:
                         self.selected_cards.pop(0).is_selected = False
@@ -420,9 +468,36 @@ class Board:
                     card_type = 1
                 
                 num_pairs -= 1
+    
+
+    def shuffle_board(self):
+
+        if self.remaining_shuffles == 0:
+            return
         
-        for layer in self.grid:
-            for row in layer:
-                print(row)
-            print("\n")
+        self.remaining_shuffles -= 1
+
+        cards = []
+        positions = []
+
+        for level in range(len(self.grid)):
+            for y in range(self.n_cells_Y - 1 if level == len(self.grid) - 1 else self.n_cells_Y):
+                for x in range(self.n_cells_X - 1 if level == len(self.grid) - 1 else self.n_cells_X):
+                    
+                    card = self.grid[level][y][x]
+
+                    if card == 0:
+                        continue
+
+                    cards.append(card)
+                    positions.append((level, y, x))
+
+        random.shuffle(cards)
+
+        for i in range(len(positions)):
+            position = positions[i]
+            self.grid[position[0]][position[1]][position[2]] = cards[i]
+
+        self.cards = []
+        self.load_game_elements()
 

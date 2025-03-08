@@ -4,6 +4,8 @@ from board import Board
 from images import Images
 from main_menu import MainMenu
 from pause_menu import PauseMenu
+from end_menu import EndMenu
+
 
 class GameState(Enum):
     MAIN_MENU = 1
@@ -38,6 +40,7 @@ class Game:
         self.main_menu = MainMenu(self)
         self.board = None
         self.pause_menu = PauseMenu(self)
+        self.end_menu = EndMenu(self)
 
         pygame.display.set_icon(self.images.icon)
 
@@ -65,6 +68,8 @@ class Game:
                             self.board.handle_click()
                         case GameState.PAUSE_MENU:
                             self.pause_menu.handle_click()
+                        case GameState.END_MENU:
+                            self.end_menu.handle_click()
 
                 elif event.type == pygame.KEYDOWN:
 
@@ -75,6 +80,8 @@ class Game:
                             self.board.handle_keyboard(event.key)
                         case GameState.PAUSE_MENU:
                             self.pause_menu.handle_keyboard(event.key)
+                        case GameState.END_MENU:
+                            self.end_menu.handle_keyboard(event.key)
 
 
             match self.state:
@@ -87,6 +94,9 @@ class Game:
                 case GameState.PAUSE_MENU:
                     self.pause_menu.update()
                     self.pause_menu.draw()
+                case GameState.END_MENU:
+                    self.end_menu.update()
+                    self.end_menu.draw()
 
             pygame.display.flip()
 
@@ -104,6 +114,11 @@ class Game:
     
     def switch_to_main(self):
         self.state = GameState.MAIN_MENU
+    
+    def switch_to_end(self):
+        self.board.update()
+        self.board.draw()
+        self.state = GameState.END_MENU
             
 
 
