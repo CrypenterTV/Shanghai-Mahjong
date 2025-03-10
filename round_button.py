@@ -18,7 +18,14 @@ class RoundButton:
 
         mouse_x, mouse_y = pygame.mouse.get_pos()
         distance = (mouse_x - self.x) ** 2 + (mouse_y - self.y) ** 2
-        self.is_hovered = distance <= self.radius ** 2
+        next_hover = distance <= self.radius ** 2
+
+        if not self.is_hovered and next_hover:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+        elif self.is_hovered and not next_hover:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+
+        self.is_hovered = next_hover
     
 
     def draw(self):

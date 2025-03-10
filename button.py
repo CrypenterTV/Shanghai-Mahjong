@@ -25,7 +25,14 @@ class Button:
 
         mouse_x, mouse_y = pygame.mouse.get_pos()
 
-        self.is_hovered = (self.x - self.width / 2 <= mouse_x <= self.x + self.width / 2) and (self.y - self.height / 2 <= mouse_y <= self.y + self.height / 2)
+        next_hover = (self.x - self.width / 2 <= mouse_x <= self.x + self.width / 2) and (self.y - self.height / 2 <= mouse_y <= self.y + self.height / 2)
+
+        if not self.is_hovered and next_hover:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+        elif self.is_hovered and not next_hover:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+
+        self.is_hovered = next_hover
 
 
     def draw(self):
@@ -56,6 +63,8 @@ class Button:
             
             pygame.draw.polygon(self.game.screen, chevron_color, left_chevron)
             pygame.draw.polygon(self.game.screen, chevron_color, right_chevron)
+
+
     
 
     def handle_click(self):

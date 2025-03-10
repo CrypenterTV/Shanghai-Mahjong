@@ -1,6 +1,5 @@
 import pygame
 from enum import Enum
-from board import Board
 from images import Images
 from main_menu import MainMenu
 from pause_menu import PauseMenu
@@ -108,17 +107,21 @@ class Game:
     def switch_to_game(self):
         self.state = GameState.GAME
         self.board.buttons[0].image = self.images.pause_icon
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
     def switch_to_pause(self):
         self.state = GameState.PAUSE_MENU
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
     
     def switch_to_main(self):
         self.state = GameState.MAIN_MENU
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
     
     def switch_to_end(self):
         self.board.update()
         self.board.draw()
         self.state = GameState.END_MENU
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
             
 
 
