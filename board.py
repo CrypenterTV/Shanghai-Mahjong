@@ -45,6 +45,8 @@ class Board:
         self.card_width = (self.width_end + self.game.level_offset - self.width_start) / self.n_cells_X
         self.card_height = (self.height_end - self.game.level_offset - self.height_start) / self.n_cells_Y
 
+        self.game.level_offset = int(self.card_width / 10)
+
         self.load_game_elements()
 
         print(f"n_cells_X: {self.n_cells_X}, n_cells_Y: {self.n_cells_Y}")
@@ -112,7 +114,7 @@ class Board:
         self.shuffle_board()
 
     def sound_button_action(self, button):
-        self.game.is_muted = not self.game.is_muted
+        self.game.mute_button_action()
         self.buttons[2].image = self.game.images.sound_off_icon if self.game.is_muted else self.game.images.sound_on_icon
     
     def idea_button_action(self, button):
@@ -287,6 +289,8 @@ class Board:
                         self.selected_cards.clear()
 
                         self.score += 10
+                        
+                        self.game.sounds.click_sound.play()
 
                         removable_pairs = self.get_removable_pairs()
 
