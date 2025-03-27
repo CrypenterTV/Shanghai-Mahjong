@@ -4,6 +4,8 @@ from button import Button
 from board import Board
 from tkinter import filedialog
 
+from round_button import RoundButton
+
 class MainMenu:
 
     def __init__(self, game):
@@ -52,6 +54,18 @@ class MainMenu:
                                    font,
                                    self.exit_button_action))
         
+        self.buttons.append(RoundButton(self.game, 
+                                        int(self.game.width * 0.035), 
+                                        int(self.game.height - self.game.width * 0.035), 
+                                        self.game.width // 40, 
+                                        self.game.images.sound_off_icon if self.game.is_muted else self.game.images.sound_on_icon, 
+                                        self.sound_button_action))
+
+
+    def sound_button_action(self, button):
+        self.game.mute_button_action()
+        self.buttons[3].image = self.game.images.sound_off_icon if self.game.is_muted else self.game.images.sound_on_icon
+
     def exit_button_action(self, button):
         sys.exit()
 

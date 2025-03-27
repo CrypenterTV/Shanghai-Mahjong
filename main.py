@@ -24,7 +24,7 @@ class Game:
 
         self.width = int(0.8 * info.current_w)
         self.height = int(0.8 * info.current_h)
-        #self.level_offset = 16;
+
         self.level_offset = 12
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.state = GameState.MAIN_MENU
@@ -42,6 +42,8 @@ class Game:
         self.images = Images(self, "assets/images/")
         self.sounds = Sounds(self, "assets/music/")
 
+        self.resize_round_buttons()
+
         self.clock = pygame.time.Clock()
 
         self.main_menu = MainMenu(self)
@@ -53,6 +55,19 @@ class Game:
 
         self.current_scene = self.main_menu
 
+        
+
+
+    def resize_round_buttons(self):
+
+        self.pause_icon_size = self.width // 26
+
+        self.images.resize_pause_icon(self.pause_icon_size, self.pause_icon_size)
+        self.images.resize_resume_icon(self.pause_icon_size, self.pause_icon_size)
+        self.images.resize_shuffle_icon(self.pause_icon_size, self.pause_icon_size)
+        self.images.resize_sound_on_icon(self.pause_icon_size, self.pause_icon_size)
+        self.images.resize_sound_off_icon(self.pause_icon_size, self.pause_icon_size)
+        self.images.resize_idea_icon(int(0.8 * self.pause_icon_size), int(0.8 * self.pause_icon_size))
 
 
     def run(self):
@@ -61,7 +76,7 @@ class Game:
 
         while running:
 
-            dt = self.clock.tick(180) / 1000
+            dt = self.clock.tick(60) / 1000
 
             for event in pygame.event.get():
 

@@ -4,6 +4,8 @@ from card import Card
 import time
 import random
 from round_button import RoundButton
+from particle_effect import ParticleEffect
+from score_popup import ScorePopup
 
 class Board:
 
@@ -15,6 +17,7 @@ class Board:
         self.timer = 0
         self.remaining_shuffles = 3
         self.last_score_update = time.time()
+        self.last_removed_time = 0
 
         self.filename = filename
         self.grid = []
@@ -56,16 +59,16 @@ class Board:
         pygame.font.init()
         self.font = pygame.font.Font(None, 40)
 
-        self.pause_icon_size = self.game.width // 26
-
-        self.game.images.resize_pause_icon(self.pause_icon_size, self.pause_icon_size)
-        self.game.images.resize_resume_icon(self.pause_icon_size, self.pause_icon_size)
-        self.game.images.resize_shuffle_icon(self.pause_icon_size, self.pause_icon_size)
-        self.game.images.resize_sound_on_icon(self.pause_icon_size, self.pause_icon_size)
-        self.game.images.resize_sound_off_icon(self.pause_icon_size, self.pause_icon_size)
-        self.game.images.resize_idea_icon(int(0.8 * self.pause_icon_size), int(0.8 * self.pause_icon_size))
-
         self.init_buttons()
+
+        self.shuffle_animation = 10
+        self.current_animation = False
+        self.last_time_shuffle_animation = time.time()
+
+        self.particle_effects = []
+        self.score_popups = []
+
+        self.current_combo = 1
 
 
     def init_buttons(self):
@@ -103,7 +106,10 @@ class Board:
                                         self.idea_button_action))
 
 
-
+    def sound_button_action(self, button):
+        self.game.mute_button_action()
+        self.buttons[2].image = self.game.images.sound_off_icon if self.game.is_muted else self.game.images.sound_on_icon
+        self.game.main_menu.buttons[3].image = self.game.images.sound_off_icon if self.game.is_muted else self.game.images.sound_on_icon
 
     def pause_button_action(self, button):
         self.buttons[0].image = self.game.images.resume_icon
@@ -111,11 +117,14 @@ class Board:
         self.game.switch_to_pause()
 
     def shuffle_button_action(self, button):
-        self.shuffle_board()
 
-    def sound_button_action(self, button):
-        self.game.mute_button_action()
-        self.buttons[2].image = self.game.images.sound_off_icon if self.game.is_muted else self.game.images.sound_on_icon
+        if self.remaining_shuffles == 0:
+            return
+        
+        self.shuffle_board()
+        self.remaining_shuffles -= 1
+        self.current_animation = True
+
     
     def idea_button_action(self, button):
 
@@ -149,6 +158,14 @@ class Board:
         return removable_pairs
 
     def update(self):
+
+        if self.current_animation:
+
+            current_time = time.time()
+
+            if current_time - self.last_time_shuffle_animation > 0.1:
+                self.shuffle_board()
+            
 
         max_level_selected_card = None
         cards_to_unhover = []
@@ -186,6 +203,10 @@ class Board:
 
         for button in self.buttons:
             button.update()
+
+        self.particle_effects = [p for p in self.particle_effects if p.update()]
+        self.score_popups = [s for s in self.score_popups if s.update()]
+
 
         current_time = time.time()
 
@@ -229,6 +250,7 @@ class Board:
             s_str = "0" + s_str
 
         score_text = self.font.render(f"Score: {self.score}", True, (255, 255, 255))
+
         time_text = self.font.render(f"Timer: {self.format_timer()}", True, (255, 255, 255))
 
         popup_surface.blit(score_text, (10, 10))
@@ -253,6 +275,16 @@ class Board:
 
         for button in self.buttons:
             button.draw()
+
+        for effect in self.particle_effects:
+            effect.draw(self.game.screen)
+        for popup in self.score_popups:
+            popup.draw(self.game.screen, self.font)
+
+        text_surface = self.font.render(f"{self.remaining_shuffles}/3", True, (255, 255, 255))
+        text_rect = text_surface.get_rect(center=(int(self.game.width * 0.035), int(self.game.height / 2 + self.game.pause_icon_size)))
+        self.game.screen.blit(text_surface, text_rect) 
+
 
 
     def handle_click(self):
@@ -283,14 +315,36 @@ class Board:
                     if self.selected_cards[0].c_type == self.selected_cards[1].c_type:
 
                         # Paire de cartes à retirer
-                        
+
+                        x1, y1 = self.selected_cards[0].card_rect.center
+                        x2, y2 = self.selected_cards[1].card_rect.center
+
+                        self.particle_effects.append(ParticleEffect(x1, y1))
+                        self.particle_effects.append(ParticleEffect(x2, y2))
+
+  
                         self.selected_cards[0].delete()
                         self.selected_cards[1].delete()
                         self.selected_cards.clear()
-
-                        self.score += 10
                         
                         self.game.sounds.click_sound.play()
+
+                        actual_time = time.time()
+
+                        score_gain = 10
+
+                        if actual_time - self.last_removed_time < 3:
+                            self.current_combo += 1
+                            score_gain *= self.current_combo
+                        else:
+                            self.current_combo = 1
+
+                        self.score += score_gain
+
+                        self.score_popups.append(ScorePopup(x1, y1, score_gain))
+                        self.score_popups.append(ScorePopup(x2, y2, score_gain))
+
+                        self.last_removed_time = actual_time
 
                         removable_pairs = self.get_removable_pairs()
 
@@ -305,9 +359,11 @@ class Board:
                                 return
                             
                             self.shuffle_board()
+                            self.current_animation = True
 
                     else:
                         self.selected_cards.pop(0).is_selected = False
+
 
     def handle_keyboard(self, keyPressed):
         if keyPressed == pygame.K_ESCAPE:
@@ -476,10 +532,14 @@ class Board:
 
     def shuffle_board(self):
 
-        if self.remaining_shuffles == 0:
+    
+        self.shuffle_animation -= 1
+
+        if self.shuffle_animation == 0:
+            self.shuffle_animation = 10
+            self.current_animation = False
             return
         
-        self.remaining_shuffles -= 1
 
         cards = []
         positions = []
@@ -504,4 +564,10 @@ class Board:
 
         self.cards = []
         self.load_game_elements()
+
+        self.last_time_shuffle_animation = time.time()
+
+        removable_pairs = self.get_removable_pairs()
+        if len(removable_pairs) == 0 and len(self.cards) > 0:
+            self.shuffle_board()
 

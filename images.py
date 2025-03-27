@@ -6,27 +6,28 @@ class Images:
 
         self.folder = folder
         self.cards = []
-        self.play_mat_background = pygame.image.load(self.folder + "tapis.jpg")
-        self.game_background = pygame.transform.scale(pygame.image.load(self.folder + "background.jpg"), (game.width, game.height))
-        self.icon = pygame.image.load(self.folder + "icon.png")
-        self.main_title = pygame.image.load(self.folder + "main_title.png")
+        self.play_mat_background = pygame.image.load(self.folder + "tapis.jpg").convert_alpha()
+        self.game_background = pygame.transform.scale(pygame.image.load(self.folder + "background.jpg").convert_alpha(), (game.width, game.height))
+        self.icon = pygame.image.load(self.folder + "icon.png").convert_alpha()
+        self.main_title = pygame.image.load(self.folder + "main_title.png").convert_alpha()
 
-        self.pause_icon = pygame.image.load(self.folder + "pause.png")
-        self.resume_icon = pygame.image.load(self.folder + "resume.png")
-        self.shuffle_icon = pygame.image.load(self.folder + "shuffle_icon.png")
+        self.pause_icon = pygame.image.load(self.folder + "pause.png").convert_alpha()
+        self.resume_icon = pygame.image.load(self.folder + "resume.png").convert_alpha()
+        self.shuffle_icon = pygame.image.load(self.folder + "shuffle_icon.png").convert_alpha()
 
-        self.sound_on_icon = pygame.image.load(self.folder + "sound_on.png")
-        self.sound_off_icon = pygame.image.load(self.folder + "sound_off.png")
+        self.sound_on_icon = pygame.image.load(self.folder + "sound_on.png").convert_alpha()
+        self.sound_off_icon = pygame.image.load(self.folder + "sound_off.png").convert_alpha()
 
-        self.idea_icon = pygame.image.load(self.folder + "idea.png")
+        self.idea_icon = pygame.image.load(self.folder + "idea.png").convert_alpha()
     
         self.load_cards()
     
     def load_cards(self):
-
+        
         for i in range(1, 39):
 
-            self.cards.append(pygame.image.load(self.folder + f"card{i}.png"))
+            self.cards.append(pygame.image.load(self.folder + f"card{i}.png").convert_alpha())
+    
 
     def resize_cards(self, width, height):
 

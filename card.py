@@ -41,6 +41,13 @@ class Card:
                     (self.coord_x - self.offset, self.coord_y + self.board.card_height + self.offset) ]
         
         self.polygon_path = Path(self.points)
+
+        self.card_rect = pygame.Rect(self.coord_x, self.coord_y, self.board.card_width, self.board.card_height)
+
+        self.should_be_drawn = True
+
+        self.gradient_cache = {}
+
     
 
     def update(self):
@@ -66,9 +73,6 @@ class Card:
         
         screen = self.board.game.screen
 
-
-        card_rect = pygame.Rect(self.coord_x, self.coord_y, self.board.card_width, self.board.card_height)
-
         
         if not self.is_selected:
 
@@ -85,23 +89,23 @@ class Card:
         else:
             pygame.draw.polygon(screen, (40, 96, 19), self.points, width=0)
 
-
+        
         if not self.is_selected:
             if self.is_hovered and self.is_removable():
-                self.draw_gradient_horizontal((255, 242, 150), (235, 153, 14), card_rect)
+                self.draw_gradient_horizontal((255, 242, 150), (235, 153, 14), self.card_rect)
             else:
                 if self.is_highlighted:
-                    self.draw_gradient_horizontal((220, 186, 248), (86, 63, 112), card_rect)
+                    self.draw_gradient_horizontal((220, 186, 248), (86, 63, 112), self.card_rect)
                 else:
-                    self.draw_gradient_horizontal((253, 223, 188), (175, 138, 106), card_rect)
+                    self.draw_gradient_horizontal((253, 223, 188), (175, 138, 106), self.card_rect)
         else:
-            self.draw_gradient_horizontal((113, 210, 89), (40, 96, 19), card_rect)
+            self.draw_gradient_horizontal((113, 210, 89), (40, 96, 19), self.card_rect)
 
         self.board.game.screen.blit(self.board.game.images.cards[self.c_type - 1], (self.coord_x, self.coord_y))
 
-        pygame.draw.line(screen, "black", card_rect.topleft, card_rect.topright, width = 1)
-        pygame.draw.line(screen, "black", card_rect.topright, card_rect.bottomright, width = 1)
 
+        pygame.draw.line(screen, "black", self.card_rect.topleft, self.card_rect.topright, width = 1)
+        pygame.draw.line(screen, "black", self.card_rect.topright, self.card_rect.bottomright, width = 1)
 
         pygame.draw.line(screen, "black", self.points[0], self.points[1], width = 1)
         pygame.draw.line(screen, "black", self.points[3], self.points[4], width = 1)
@@ -116,14 +120,30 @@ class Card:
         self.board.grid[self.level][self.cell_y][self.cell_x] = 0
 
 
-
-    def draw_gradient_horizontal(self, color1, color2, rect):
+    def draw_gradient_horizontal(self, color2, color1, rect):
+        
         x, y, width, height = rect
-        for i in range(height):
-            r = color2[0] + (color1[0] - color2[0]) * i // height
-            g = color2[1] + (color1[1] - color2[1]) * i // height
-            b = color2[2] + (color1[2] - color2[2]) * i // height
-            pygame.draw.line(self.board.game.screen, (r, g, b), (x, y + height - i), (x + width, y + height - i))
+        key = (color1, color2, width, height)
+
+        if key not in self.gradient_cache:
+
+            gradient_surface = pygame.Surface((width, height + 1))
+            pixels = pygame.surfarray.pixels3d(gradient_surface)
+
+            for i in range(height + 1):
+                ratio = i / height
+                r = int(color2[0] + (color1[0] - color2[0]) * ratio)
+                g = int(color2[1] + (color1[1] - color2[1]) * ratio)
+                b = int(color2[2] + (color1[2] - color2[2]) * ratio)
+
+                pixels[:, i] = [r, g, b]
+
+            del pixels
+            gradient_surface = gradient_surface.convert()
+
+            self.gradient_cache[key] = gradient_surface
+
+        self.board.game.screen.blit(self.gradient_cache[key], (x, y))
 
 
 
@@ -172,6 +192,3 @@ class Card:
                         top_removable = False
         
         return top_removable and side_removable
-
-    
-    
