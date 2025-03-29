@@ -6,6 +6,7 @@ import random
 from round_button import RoundButton
 from particle_effect import ParticleEffect
 from score_popup import ScorePopup
+import board_helper
 
 class Board:
 
@@ -15,9 +16,14 @@ class Board:
 
         self.score = 0
         self.timer = 0
+        self.current_combo = 1
         self.remaining_shuffles = 3
-        self.last_score_update = time.time()
+
+        self.last_score_update_time = time.time()
         self.last_removed_time = 0
+        self.last_shuffle_animation_time = 0
+        self.last_idea_button_time = 0
+        self.last_solver_used_time = 0
 
         self.filename = filename
         self.grid = []
@@ -26,12 +32,24 @@ class Board:
         self.n_cells_X = 0
         self.n_cells_Y = 0
 
+
         self.width_start = 0.1 * game.width
         self.width_end = 0.9 * game.width
         self.height_start = 0.1 * game.height
         self.height_end = 0.9 * game.height
 
+        self.shuffle_animation = 10
+        self.removables_cards = 0
+
+        self.ending = False
+        self.current_animation = False
+        self.auto_solving = False
+        self.auto_solving_deleting = False
+
         self.buttons = []
+        self.particle_effects = []
+        self.score_popups = []
+        self.current_removables = []
 
         self.play_mat_rect = pygame.Rect(self.width_start - 3*self.game.level_offset, self.height_start - 2*self.game.level_offset, self.width_end - self.width_start + 5*self.game.level_offset, self.height_end - self.height_start + 4*self.game.level_offset)
         self.game.images.resize_play_mat_bg(self.width_end - self.width_start + 5*self.game.level_offset, self.height_end - self.height_start + 4*self.game.level_offset)
@@ -42,7 +60,8 @@ class Board:
         if filename == None:
             self.generate_grid(4, 13, 8)
         else:
-            self.load_from_file()
+            board_helper.load_from_file(self, self.filename)
+            
         self.analyse_board()
 
         self.card_width = (self.width_end + self.game.level_offset - self.width_start) / self.n_cells_X
@@ -61,16 +80,8 @@ class Board:
 
         self.init_buttons()
 
-        self.shuffle_animation = 10
-        self.current_animation = False
-        self.last_time_shuffle_animation = time.time()
 
-        self.particle_effects = []
-        self.score_popups = []
-
-        self.current_combo = 1
-
-
+        
     def init_buttons(self):
 
 
@@ -100,11 +111,19 @@ class Board:
 
         self.buttons.append(RoundButton(self.game, 
                                         int(self.game.width - self.game.width * 0.035), 
-                                        int(self.game.height / 2), 
+                                        int(self.game.height / 2 - self.game.width // 20), 
                                         self.game.width // 40, 
                                         self.game.images.idea_icon, 
                                         self.idea_button_action))
 
+
+        self.buttons.append(RoundButton(self.game, 
+                                        int(self.game.width - self.game.width * 0.035), 
+                                        int(self.game.height / 2 + self.game.width // 20), 
+                                        self.game.width // 40, 
+                                        self.game.images.robot_icon, 
+                                        self.auto_solver_button_action))
+        
 
     def sound_button_action(self, button):
         self.game.mute_button_action()
@@ -128,6 +147,21 @@ class Board:
     
     def idea_button_action(self, button):
 
+        current_time = time.time()
+
+        if current_time - self.last_idea_button_time < 5:
+            return
+        
+        self.last_idea_button_time = current_time
+
+        self.score_popups.append(ScorePopup(int(self.game.width - self.game.width * 0.035), 
+                                            int(self.game.height / 2 - self.game.width // 20), 
+                                            "-100", 
+                                            (255,0,0)))
+
+        self.current_combo = 1
+        self.score -= 100
+
         for card in self.cards:
             if card.is_highlighted:
                 return
@@ -139,23 +173,66 @@ class Board:
             pair[0].is_highlighted = True
             pair[1].is_highlighted = True
 
+    
+    def auto_solver_button_action(self, button):
+
+        self.auto_solving = not self.auto_solving
+        
+
+    
+    def auto_solver(self):
+
+        if not self.auto_solving:
+            return
+        
+        if len(self.current_removables) == 0:
+            self.current_removables = self.get_removable_pairs()
+
+
+        if len(self.current_removables) == 0:
+            self.auto_solving = False
+            return
+
+
+        if self.auto_solving_deleting:
+            self.remove_cards()
+            self.auto_solving_deleting = False
+        else:
+
+            pair = self.current_removables.pop(0)
+
+            self.selected_cards = [pair[0], pair[1]]
+
+            pair[0].is_selected = True
+            pair[1].is_selected = True
+
+            self.auto_solving_deleting = True
+
+
                 
     def get_removable_pairs(self):
         
         removable_pairs = []
+        self.removables_cards = 0
 
         for c1 in self.cards:
             if not c1.is_removable():
                 continue
+            self.removables_cards += 1
             for c2 in self.cards:
                 if c1 == c2:
                     continue
                 if not c2.is_removable():
                     continue
                 if c1.c_type == c2.c_type:
+                    
+                    if removable_pairs.__contains__((c2, c1)):
+                        continue
+
                     removable_pairs.append((c1, c2))
         
         return removable_pairs
+
 
     def update(self):
 
@@ -163,43 +240,11 @@ class Board:
 
             current_time = time.time()
 
-            if current_time - self.last_time_shuffle_animation > 0.1:
+            if current_time - self.last_shuffle_animation_time > 0.1:
                 self.shuffle_board()
             
 
-        max_level_selected_card = None
-        cards_to_unhover = []
-
-        for card in self.cards:
-            
-            card.update()
-
-            if card.is_hovered:
-                
-                if max_level_selected_card == None:
-                    max_level_selected_card = card
-                else:
-
-                    if max_level_selected_card.level < card.level:
-                        cards_to_unhover.append(max_level_selected_card)
-                        max_level_selected_card = card
-
-                    elif max_level_selected_card.level == card.level:
-
-                        if max_level_selected_card.inside_card_side and card.inside_card:
-
-                            cards_to_unhover.append(max_level_selected_card)
-                            max_level_selected_card = card
-                        else:
-                            card.is_hovered = False
-
-                    else:
-                        card.is_hovered = False
-        
-        for card in cards_to_unhover:
-            card.is_hovered = False
-        
-        self.current_card = max_level_selected_card
+        board_helper.update_current_card(self)
 
         for button in self.buttons:
             button.update()
@@ -207,12 +252,25 @@ class Board:
         self.particle_effects = [p for p in self.particle_effects if p.update()]
         self.score_popups = [s for s in self.score_popups if s.update()]
 
-
         current_time = time.time()
 
-        if current_time - self.last_score_update >= 1:
+        if current_time - self.last_score_update_time >= 1:
             self.timer += 1
-            self.last_score_update = current_time
+            self.last_score_update_time = current_time
+
+
+        if not self.current_animation:
+            if current_time - self.last_solver_used_time >= 0.1:
+                self.auto_solver()
+                self.last_solver_used_time = time.time()
+
+        if self.ending:
+
+            if len(self.particle_effects) == 0 and len(self.score_popups) == 0:
+                self.ending = False
+                self.game.switch_to_end()
+                
+
 
     def format_timer(self):
 
@@ -250,6 +308,7 @@ class Board:
             s_str = "0" + s_str
 
         score_text = self.font.render(f"Score: {self.score}", True, (255, 255, 255))
+        #score_text = self.font.render(f"FPS: {self.game.clock.get_fps()}", True, (255, 255, 255))
 
         time_text = self.font.render(f"Timer: {self.format_timer()}", True, (255, 255, 255))
 
@@ -314,55 +373,57 @@ class Board:
 
                     if self.selected_cards[0].c_type == self.selected_cards[1].c_type:
 
-                        # Paire de cartes à retirer
-
-                        x1, y1 = self.selected_cards[0].card_rect.center
-                        x2, y2 = self.selected_cards[1].card_rect.center
-
-                        self.particle_effects.append(ParticleEffect(x1, y1))
-                        self.particle_effects.append(ParticleEffect(x2, y2))
-
-  
-                        self.selected_cards[0].delete()
-                        self.selected_cards[1].delete()
-                        self.selected_cards.clear()
-                        
-                        self.game.sounds.click_sound.play()
-
-                        actual_time = time.time()
-
-                        score_gain = 10
-
-                        if actual_time - self.last_removed_time < 3:
-                            self.current_combo += 1
-                            score_gain *= self.current_combo
-                        else:
-                            self.current_combo = 1
-
-                        self.score += score_gain
-
-                        self.score_popups.append(ScorePopup(x1, y1, score_gain))
-                        self.score_popups.append(ScorePopup(x2, y2, score_gain))
-
-                        self.last_removed_time = actual_time
-
-                        removable_pairs = self.get_removable_pairs()
-
-                        if len(self.cards) == 0:
-                            self.game.switch_to_end()
-                            return
-
-                        if len(removable_pairs) == 0:
-                            
-                            if self.remaining_shuffles == 0:
-                                self.game.switch_to_end()
-                                return
-                            
-                            self.shuffle_board()
-                            self.current_animation = True
+                        self.remove_cards()
 
                     else:
                         self.selected_cards.pop(0).is_selected = False
+
+
+    def remove_cards(self):
+        x1, y1 = self.selected_cards[0].card_rect.center
+        x2, y2 = self.selected_cards[1].card_rect.center
+
+        self.particle_effects.append(ParticleEffect(x1, y1))
+        self.particle_effects.append(ParticleEffect(x2, y2))
+
+  
+        self.selected_cards[0].delete()
+        self.selected_cards[1].delete()
+        self.selected_cards.clear()
+        
+        self.game.sounds.click_sound.play()
+
+        actual_time = time.time()
+
+        score_gain = 10
+
+        if self.auto_solving:
+            score_gain = 0
+
+        if actual_time - self.last_removed_time < 3:
+            self.current_combo += 1
+            score_gain *= self.current_combo
+        else:
+            self.current_combo = 1
+
+        self.score += 2 * score_gain
+
+        self.score_popups.append(ScorePopup(x1, y1, f"+{score_gain}", (255, 255, 0)))
+        self.score_popups.append(ScorePopup(x2, y2, f"+{score_gain}", (255, 255, 0)))
+
+        self.last_removed_time = actual_time
+
+        self.current_removables = self.get_removable_pairs()
+
+        if len(self.cards) == 0:
+            self.ending = True
+            return
+
+        if len(self.current_removables) == 0:
+                        
+            self.shuffle_board()
+            self.current_animation = True
+        
 
 
     def handle_keyboard(self, keyPressed):
@@ -400,6 +461,8 @@ class Board:
 
     def load_game_elements(self):
 
+        positions = []
+        cards_types = []
 
         for level in range(len(self.grid)):
 
@@ -409,85 +472,38 @@ class Board:
 
                     if self.grid[level][i][j] == 0:
                         continue
+
+                    if self.grid[level][i][j] == -1:
+                        positions.append((level, i, j))
+                        continue
+                    
                    
                     self.cards.append(Card(self, self.grid[level][i][j], level, j, i))
-
-    
-    def load_from_file(self):
-
-        self.grid = []
-
-        if not os.path.isfile(self.filename):
-            raise Exception(f"Le fichier du niveau {self.filename} est introuvable.")
         
-        with open(self.filename, "r") as file:
 
-            current_2d = []
+        if len(positions) == 0:
+            return
 
-            for line in file:
+        for i in range(len(positions) // 2):
 
-                line = line.strip()
+            card_type = random.randint(1, 38)
+            cards_types.append(card_type)
+            cards_types.append(card_type)
+        
+        random.shuffle(cards_types)
 
-                if line == "":
+        for i in range(len(positions)):
 
-                    if len(current_2d) > 0:
-                        self.grid.append(current_2d)
-                        current_2d = []
-                
-                else:
+            position = positions[i]
 
-                    line = line.split(" ")
+            self.grid[position[0]][position[1]][position[2]] = cards_types[i]
 
-                    current_line = []
-
-                    for char in line:
-                        
-                        current_line.append(int(char))
-                    
-                    current_2d.append(current_line)
-
-            if len(current_2d) > 0:
-                self.grid.append(current_2d)
+            self.cards.append(Card(self, cards_types[i], position[0], position[2], position[1]))
+        
+        board_helper.sort_cards(self)
 
 
 
-
-    def export_to_file(self, filename : str):
-
-        with open(filename, "w+") as file:
-
-            for i in range(len(self.grid)):
-
-                current_2d = self.grid[i]
-
-                for j in range(len(current_2d)):
-                    
-                    line = current_2d[j]
-
-                    sb = ""
-                    
-                    for k in range(len(line)):
-
-                        space = " "
-
-                        if k == len(line) - 1:
-                            space = ""
-
-                        sb += str(line[k]) + space
-
-                    return_char = "\n"
-
-                    if i == len(self.grid) - 1 and j == len(current_2d) - 1:
-                        return_char = ""
-
-                    file.write(sb + return_char)
-
-                if i == len(self.grid) - 1:
-                    continue
-
-                file.write("\n")
-
-    
     def generate_grid(self, n_levels, n_cells_X, n_cells_Y):
 
         self.grid = []
@@ -565,9 +581,15 @@ class Board:
         self.cards = []
         self.load_game_elements()
 
-        self.last_time_shuffle_animation = time.time()
+        self.last_shuffle_animation_time = time.time()
 
         removable_pairs = self.get_removable_pairs()
+
+        if self.removables_cards <= 1:
+            self.current_animation = False
+            self.ending = True
+
+        # On relance un shuffle
         if len(removable_pairs) == 0 and len(self.cards) > 0:
             self.shuffle_board()
-
+            self.current_animation = True

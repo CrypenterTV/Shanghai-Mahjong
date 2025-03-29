@@ -8,6 +8,3 @@ class Sounds:
 
         self.click_sound = pygame.mixer.Sound(folder + "break_sound.mp3")
         self.click_sound.set_volume(1)
-    
-
-

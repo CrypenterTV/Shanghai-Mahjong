@@ -3,7 +3,7 @@ from matplotlib.path import Path
 
 class Card:
 
-    def __init__(self, board, c_type, level, cell_x, cell_y):
+    def __init__(self, board, c_type, level, cell_x, cell_y, fake_card=False):
         
         self.is_expired = False
 
@@ -23,6 +23,8 @@ class Card:
         self.is_highlighted = False
 
         self.is_selected = False
+
+        self.fake_card = fake_card
 
         self.is_top_level = self.level == len(self.board.grid) - 1
 
@@ -76,7 +78,7 @@ class Card:
         
         if not self.is_selected:
 
-            if not self.is_removable():
+            if not self.is_removable() and not self.fake_card:
                 pygame.draw.polygon(screen, shadow_color, self.points, width=0)
             else:
                 if self.is_hovered:
@@ -91,7 +93,7 @@ class Card:
 
         
         if not self.is_selected:
-            if self.is_hovered and self.is_removable():
+            if (self.is_hovered and self.is_removable()) or (self.is_hovered and self.fake_card):
                 self.draw_gradient_horizontal((255, 242, 150), (235, 153, 14), self.card_rect)
             else:
                 if self.is_highlighted:
@@ -101,7 +103,8 @@ class Card:
         else:
             self.draw_gradient_horizontal((113, 210, 89), (40, 96, 19), self.card_rect)
 
-        self.board.game.screen.blit(self.board.game.images.cards[self.c_type - 1], (self.coord_x, self.coord_y))
+        if not self.fake_card:
+            self.board.game.screen.blit(self.board.game.images.cards[self.c_type - 1], (self.coord_x, self.coord_y))
 
 
         pygame.draw.line(screen, "black", self.card_rect.topleft, self.card_rect.topright, width = 1)

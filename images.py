@@ -19,6 +19,9 @@ class Images:
         self.sound_off_icon = pygame.image.load(self.folder + "sound_off.png").convert_alpha()
 
         self.idea_icon = pygame.image.load(self.folder + "idea.png").convert_alpha()
+        self.robot_icon = pygame.image.load(self.folder + "robot.png").convert_alpha()
+
+        self.reset_icon = pygame.image.load(self.folder + "reset_icon.png").convert_alpha()
     
         self.load_cards()
     
@@ -57,4 +60,10 @@ class Images:
         self.sound_off_icon = pygame.transform.scale(self.sound_off_icon, (int(width), int(height)))
 
     def resize_idea_icon(self, width, height):
-        self.idea_icon = pygame.transform.scale(self.idea_icon, (int(width), int(height)))   
+        self.idea_icon = pygame.transform.scale(self.idea_icon, (int(width), int(height)))
+
+    def resize_robot_icon(self, width, height):
+        self.robot_icon = pygame.transform.scale(self.robot_icon, (int(width), int(height)))
+
+    def resize_reset_icon(self, width, height):
+        self.reset_icon = pygame.transform.scale(self.reset_icon, (int(width), int(height)))
