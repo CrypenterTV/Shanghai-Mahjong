@@ -70,17 +70,18 @@ class Game:
 
     def resize_round_buttons(self):
 
-        self.pause_icon_size = self.width // 26
+        self.round_icon_size = self.width // 26
 
-        self.images.resize_pause_icon(self.pause_icon_size, self.pause_icon_size)
-        self.images.resize_resume_icon(self.pause_icon_size, self.pause_icon_size)
-        self.images.resize_shuffle_icon(self.pause_icon_size, self.pause_icon_size)
-        self.images.resize_sound_on_icon(self.pause_icon_size, self.pause_icon_size)
-        self.images.resize_sound_off_icon(self.pause_icon_size, self.pause_icon_size)
-        self.images.resize_idea_icon(int(0.8 * self.pause_icon_size), int(0.8 * self.pause_icon_size))
-        self.images.resize_robot_icon(int(0.9 * self.pause_icon_size), int(0.9 * self.pause_icon_size))
-        self.images.resize_reset_icon(self.pause_icon_size, self.pause_icon_size)
-
+        self.images.resize_pause_icon(self.round_icon_size, self.round_icon_size)
+        self.images.resize_resume_icon(self.round_icon_size, self.round_icon_size)
+        self.images.resize_shuffle_icon(self.round_icon_size, self.round_icon_size)
+        self.images.resize_sound_on_icon(self.round_icon_size, self.round_icon_size)
+        self.images.resize_sound_off_icon(self.round_icon_size, self.round_icon_size)
+        self.images.resize_idea_icon(int(0.8 * self.round_icon_size), int(0.8 * self.round_icon_size))
+        self.images.resize_robot_icon(int(0.9 * self.round_icon_size), int(0.9 * self.round_icon_size))
+        self.images.resize_reset_icon(self.round_icon_size, self.round_icon_size)
+        self.images.resize_plus_icon(int(0.4 * self.round_icon_size), int(0.4 * self.round_icon_size))
+        self.images.resize_minus_icon(int(0.65 * self.round_icon_size), int(0.65 * self.round_icon_size))
 
     def run(self):
 

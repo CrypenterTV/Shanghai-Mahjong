@@ -58,7 +58,9 @@ class Board:
 
 
         if filename == None:
-            self.generate_grid(4, 13, 8)
+            self.generate_grid(self.game.preferences.get_value("grid_size_z", 4),
+                               self.game.preferences.get_value("grid_size_x", 13),
+                               self.game.preferences.get_value("grid_size_y", 8))
         else:
             board_helper.load_from_file(self, self.filename)
             
@@ -194,7 +196,7 @@ class Board:
             return
 
 
-        if self.auto_solving_deleting:
+        if self.auto_solving_deleting and len(self.selected_cards) == 2:
             self.remove_cards()
             self.auto_solving_deleting = False
         else:
@@ -341,7 +343,7 @@ class Board:
             popup.draw(self.game.screen, self.font)
 
         text_surface = self.font.render(f"{self.remaining_shuffles}/3", True, (255, 255, 255))
-        text_rect = text_surface.get_rect(center=(int(self.game.width * 0.035), int(self.game.height / 2 + self.game.pause_icon_size)))
+        text_rect = text_surface.get_rect(center=(int(self.game.width * 0.035), int(self.game.height / 2 + self.game.round_icon_size)))
         self.game.screen.blit(text_surface, text_rect) 
 
 

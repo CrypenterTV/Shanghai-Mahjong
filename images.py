@@ -22,6 +22,9 @@ class Images:
         self.robot_icon = pygame.image.load(self.folder + "robot.png").convert_alpha()
 
         self.reset_icon = pygame.image.load(self.folder + "reset_icon.png").convert_alpha()
+        
+        self.plus_icon = pygame.image.load(self.folder + "plus_icon.png").convert_alpha()
+        self.minus_icon = pygame.image.load(self.folder + "minus_icon.png").convert_alpha()
     
         self.load_cards()
     
@@ -67,3 +70,9 @@ class Images:
 
     def resize_reset_icon(self, width, height):
         self.reset_icon = pygame.transform.scale(self.reset_icon, (int(width), int(height)))
+    
+    def resize_plus_icon(self, width, height):
+        self.plus_icon = pygame.transform.scale(self.plus_icon, (int(width), int(height)))
+
+    def resize_minus_icon(self, width, height):
+        self.minus_icon = pygame.transform.scale(self.minus_icon, (int(width), int(height)))
