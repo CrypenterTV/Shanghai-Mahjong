@@ -17,6 +17,7 @@ class RoundButton:
     def update(self):
 
         mouse_x, mouse_y = pygame.mouse.get_pos()
+        # On vérifie que la souris soit dans le bouton
         distance = (mouse_x - self.x) ** 2 + (mouse_y - self.y) ** 2
         next_hover = distance <= self.radius ** 2
 

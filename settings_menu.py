@@ -77,6 +77,7 @@ class SettingsMenu:
                                         self.plus_y_button_action))
 
 
+    # Fonctions d'actions des boutons pour incrémenter / décrémenter les valeurs des paramètres
     def minus_x_button_action(self, button):
         
         if self.grid_size_x <= 5:
@@ -119,7 +120,9 @@ class SettingsMenu:
         
         self.grid_size_y += 1
 
+
     def close_button_action(self, button):
+        # A la fermeture du menu, on sauvegarde les changements dans le fichier JSON
         self.game.preferences.update_preference("grid_size_z", self.grid_size_z)
         self.game.preferences.update_preference("grid_size_x", self.grid_size_x)
         self.game.preferences.update_preference("grid_size_y", self.grid_size_y)

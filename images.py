@@ -6,6 +6,8 @@ class Images:
 
         self.folder = folder
         self.cards = []
+
+        # Toutes les images du jeu
         self.play_mat_background = pygame.image.load(self.folder + "tapis.jpg").convert_alpha()
         self.game_background = pygame.transform.scale(pygame.image.load(self.folder + "background.jpg").convert_alpha(), (game.width, game.height))
         self.icon = pygame.image.load(self.folder + "icon.png").convert_alpha()

@@ -27,6 +27,7 @@ class Button:
 
         next_hover = (self.x - self.width / 2 <= mouse_x <= self.x + self.width / 2) and (self.y - self.height / 2 <= mouse_y <= self.y + self.height / 2)
 
+        # Changement du curseur du joueur lorsqu'il passe sur le bouton
         if not self.is_hovered and next_hover:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
         elif self.is_hovered and not next_hover:
@@ -47,7 +48,7 @@ class Button:
         text_rect = text_surface.get_rect(center=(self.x, self.y))
         self.game.screen.blit(text_surface, text_rect)
 
-        # Chevrons de sélection
+        # Chevrons de sélection : gauche et droite
         if self.is_hovered:
             chevron_color = (234, 161, 14)
             chevron_size = self.height // 3  

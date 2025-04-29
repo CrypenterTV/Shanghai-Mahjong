@@ -23,6 +23,7 @@ class LevelEditor:
         self.grid = []
         self.init_grid()
 
+        # Dimensions
         self.width_start = 0.1 * game.width
         self.width_end = 0.9 * game.width
         self.height_start = 0.05 * game.height

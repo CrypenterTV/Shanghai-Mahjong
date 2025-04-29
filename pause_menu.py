@@ -63,12 +63,13 @@ class PauseMenu:
 
     def save_action_button(self, button):
         
+        # Demande de sélection de fichier au joueur
         file_path = filedialog.asksaveasfilename(defaultextension=".txt", 
                                                  filetypes=[("Fichier de sauvegarde", "*.txt"), ("Tous les fichiers", "*.*")],
                                                  title="Sélectionnez l'emplacement de sauvegarde du niveau.")
 
         if file_path:
-            board_helper.export_to_file(self.game.board, file_path)
+            board_helper.export_to_file(self.game.board, file_path) # Export
 
             messagebox.showinfo("Enregistrement", f"Votre partie a été sauvegardée avec succès à l'emplacement : ${file_path} !")
 

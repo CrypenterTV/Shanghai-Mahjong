@@ -32,10 +32,12 @@ class Game:
         self.preferences = Preferences("datas.json")
         self.preferences.load_preferences()
 
-        self.level_offset = 12
+        self.level_offset = 12 # Offset par défaut des niveaux
+
         self.screen = pygame.display.set_mode((self.width, self.height))
-        self.state = GameState.MAIN_MENU
+        self.state = GameState.MAIN_MENU # Menu principal à l'ouverture du jeu
         
+        # Gestion de la musique
         self.is_muted = self.preferences.get_value("is_muted", False)
         self.music_pos = 0
 
@@ -47,6 +49,7 @@ class Game:
 
         pygame.display.set_caption("Shanghai Mahjong")
 
+        # Chargement des images / sons
         self.images = Images(self, "assets/images/")
         self.sounds = Sounds(self, "assets/music/")
 
@@ -54,6 +57,7 @@ class Game:
 
         self.clock = pygame.time.Clock()
 
+        # Initialisation des menus
         self.main_menu = MainMenu(self)
         self.board = None
         self.level_editor = None
@@ -70,6 +74,8 @@ class Game:
 
     def resize_round_buttons(self):
 
+        # Resize des images en fonction de la taille de la fenêtre
+
         self.round_icon_size = self.width // 26
 
         self.images.resize_pause_icon(self.round_icon_size, self.round_icon_size)
@@ -82,6 +88,7 @@ class Game:
         self.images.resize_reset_icon(self.round_icon_size, self.round_icon_size)
         self.images.resize_plus_icon(int(0.4 * self.round_icon_size), int(0.4 * self.round_icon_size))
         self.images.resize_minus_icon(int(0.65 * self.round_icon_size), int(0.65 * self.round_icon_size))
+
 
     def run(self):
 
@@ -96,12 +103,12 @@ class Game:
                 if event.type == pygame.QUIT:
                     running = False
                 
-                elif event.type == pygame.MOUSEBUTTONDOWN:
+                elif event.type == pygame.MOUSEBUTTONDOWN: # Gestion des clicks souris
 
                     self.current_scene.update()
                     self.current_scene.handle_click()
 
-                elif event.type == pygame.KEYDOWN:
+                elif event.type == pygame.KEYDOWN: # Gestion du clavier
 
                     self.current_scene.handle_keyboard(event.key)
 
@@ -114,7 +121,7 @@ class Game:
         
         pygame.quit()
 
-    
+    # Méthodes pour changer de fenêtres avec reset du curseur
     def switch_to_game(self):
         self.state = GameState.GAME
         self.board.buttons[0].image = self.images.pause_icon
@@ -151,15 +158,17 @@ class Game:
 
     def mute_button_action(self):
 
+        # Gestion de la musique
+
         if self.is_muted:
-            pygame.mixer.music.play(-1, start=self.music_pos)
+            pygame.mixer.music.play(-1, start=self.music_pos) # On reprend la lecture à l'endroit précédent (pas de reprise depuis le début)
             self.is_muted = False
         else:
             self.music_pos = pygame.mixer.music.get_pos() / 1000
             pygame.mixer.music.pause()
             self.is_muted = True
         
-        self.preferences.update_preference("is_muted", self.is_muted)
+        self.preferences.update_preference("is_muted", self.is_muted) # Actualisation du fichier json
 
             
 

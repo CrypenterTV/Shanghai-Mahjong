@@ -1,11 +1,13 @@
 import os
 
 def update_current_card(board):
+
     max_level_selected_card = None
     cards_to_unhover = []
 
+    # On surligne uniquement la bonne carte parmi toutes les cartes en dessous du curseur
     for card in board.cards:
-            
+        
         card.update()
 
         if card.is_hovered:
@@ -14,22 +16,24 @@ def update_current_card(board):
                 max_level_selected_card = card
             else:
 
-                if max_level_selected_card.level < card.level:
+                if max_level_selected_card.level < card.level: # On trouve une carte plus haute
                     cards_to_unhover.append(max_level_selected_card)
                     max_level_selected_card = card
 
                 elif max_level_selected_card.level == card.level:
 
-                    if max_level_selected_card.inside_card_side and card.inside_card:
+                    if max_level_selected_card.inside_card_side and card.inside_card: # Le curseur est au milieu de la carte (et pas sur les côtés)
 
                         cards_to_unhover.append(max_level_selected_card)
                         max_level_selected_card = card
+
                     else:
                         card.is_hovered = False
 
                 else:
                     card.is_hovered = False
-        
+    
+    # Retrait du surlignage pour les autres cartes
     for card in cards_to_unhover:
         card.is_hovered = False
         
@@ -38,6 +42,8 @@ def update_current_card(board):
 
 
 def export_to_file(board, filename):
+
+    # Export vers un fichier texte depuis l'état du board
 
     with open(filename, "w+") as file:
 
@@ -70,10 +76,13 @@ def export_to_file(board, filename):
             if i == len(board.grid) - 1:
                 continue
 
-            file.write("\n")
+            file.write("\n") # Retour à la ligne entre chaque étage du board
+
 
 
 def load_from_file(board, filename):
+
+    # Chargement d'un board depuis un fichier texte
 
     board.grid = []
 
@@ -86,7 +95,7 @@ def load_from_file(board, filename):
 
         for line in file:
 
-            line = line.strip()
+            line = line.strip() # Retrait des espaces inutiles s'il y en a
 
             if line == "":
 
@@ -113,6 +122,9 @@ def load_from_file(board, filename):
 def sort_cards(board):
 
     n = len(board.cards)
+
+    # Tri par sélection des cartes du board selon plusieurs critères :
+    #   de niveau en niveau, de gauche vers la droite et de haut en bas
     
     for i in range(1, n):
 
@@ -122,14 +134,17 @@ def sort_cards(board):
         while j >= 0:
             swap = False
 
+            # Tri des niveaux par ordre croissant
             if board.cards[j].level > key_card.level:
                 swap = True
 
             elif board.cards[j].level == key_card.level:
-
+                
+                # Tri des coordonnées y par ordre croissant
                 if board.cards[j].cell_y > key_card.cell_y:
                     swap = True
 
+                # Tri des coordonnées x par odre décroissant
                 elif board.cards[j].cell_y == key_card.cell_y:
                     if board.cards[j].cell_x < key_card.cell_x:
                         swap = True

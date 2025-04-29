@@ -9,6 +9,8 @@ class Preferences:
 
     def load_preferences(self):
 
+        # Chargement des préférences depuis le fichier JSON
+
         if not os.path.exists(self.filename):
 
             raise Exception(f"Fichier de paramètres '${self.filename}' introuvable.")
@@ -21,6 +23,8 @@ class Preferences:
     
     
     def write_preferences(self):
+
+        # Enregistrement des préférences dans le fichier JSON
        
         with open(self.filename, "w+", encoding="utf8") as file:
 

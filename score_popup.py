@@ -11,7 +11,7 @@ class ScorePopup:
         self.color = color
 
     def update(self):
-        self.y -= 1  # Faire monter le texte
+        self.y -= 1  # Faire monter le texte vers le haut de la fenêtre
         return time.time() - self.start_time < self.duration
 
     def draw(self, surface, font):

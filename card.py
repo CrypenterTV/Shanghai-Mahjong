@@ -35,6 +35,7 @@ class Card:
             self.coord_x += self.board.card_width / 2
             self.coord_y += self.board.card_height / 2
         
+        # Polygone des contours de la carte (le relief)
         self.points = [ (self.coord_x - self.offset, self.coord_y + self.offset),
                     (self.coord_x, self.coord_y),
                     (self.coord_x, self.coord_y + self.board.card_height), 
@@ -59,9 +60,9 @@ class Card:
         
         mouse_x, mouse_y = pygame.mouse.get_pos()
 
-        self.inside_card = self.coord_x <= mouse_x <= self.coord_x + self.board.card_width and self.coord_y <= mouse_y <= self.coord_y + self.board.card_height
+        self.inside_card = self.coord_x <= mouse_x <= self.coord_x + self.board.card_width and self.coord_y <= mouse_y <= self.coord_y + self.board.card_height # Si le curseur est au milieu de la carte
 
-        self.inside_card_side = self.polygon_path.contains_point((mouse_x, mouse_y))
+        self.inside_card_side = self.polygon_path.contains_point((mouse_x, mouse_y)) # Si le curseur est sur les contours
 
         self.is_hovered = self.inside_card or self.inside_card_side
 
@@ -75,7 +76,7 @@ class Card:
         
         screen = self.board.game.screen
 
-        
+        # On dessine la bonne couleur des contours en fonction des critères
         if not self.is_selected:
 
             if not self.is_removable() and not self.fake_card:
@@ -92,6 +93,7 @@ class Card:
             pygame.draw.polygon(screen, (40, 96, 19), self.points, width=0)
 
         
+        # On dessine la bonne couleur de carte en fonction des critères
         if not self.is_selected:
             if (self.is_hovered and self.is_removable()) or (self.is_hovered and self.fake_card):
                 self.draw_gradient_horizontal((255, 242, 150), (235, 153, 14), self.card_rect)
@@ -106,7 +108,7 @@ class Card:
         if not self.fake_card:
             self.board.game.screen.blit(self.board.game.images.cards[self.c_type - 1], (self.coord_x, self.coord_y))
 
-
+        # Lignes noires des contours
         pygame.draw.line(screen, "black", self.card_rect.topleft, self.card_rect.topright, width = 1)
         pygame.draw.line(screen, "black", self.card_rect.topright, self.card_rect.bottomright, width = 1)
 
@@ -118,6 +120,7 @@ class Card:
     
     
     def delete(self):
+        # Suppression de la carte
         self.is_expired = True
         self.board.cards.remove(self)
         self.board.grid[self.level][self.cell_y][self.cell_x] = 0
@@ -126,15 +129,21 @@ class Card:
     def draw_gradient_horizontal(self, color2, color1, rect):
         
         x, y, width, height = rect
+
+        # On construit une clé unique pour identifier ce dégradé dans le cache :
+        # elle dépend des deux couleurs et des dimensions du rectangle
         key = (color1, color2, width, height)
 
-        if key not in self.gradient_cache:
+        if key not in self.gradient_cache: # Si le dégradé correspondant n'a pas encore généré
 
             gradient_surface = pygame.Surface((width, height + 1))
             pixels = pygame.surfarray.pixels3d(gradient_surface)
 
             for i in range(height + 1):
+
                 ratio = i / height
+
+                # Interpolation linéaire de la couleur : du haut (color1) vers le bas (color2)
                 r = int(color2[0] + (color1[0] - color2[0]) * ratio)
                 g = int(color2[1] + (color1[1] - color2[1]) * ratio)
                 b = int(color2[2] + (color1[2] - color2[2]) * ratio)
@@ -144,6 +153,7 @@ class Card:
             del pixels
             gradient_surface = gradient_surface.convert()
 
+            # On stocke le résultat pour ne pas avoir à recalculer à chaque appel
             self.gradient_cache[key] = gradient_surface
 
         self.board.game.screen.blit(self.gradient_cache[key], (x, y))
@@ -154,13 +164,13 @@ class Card:
         
         side_removable = False
 
-        if self.cell_x == 0:
+        if self.cell_x == 0: # Si la carte est toute à gauche
             side_removable = True
-        elif self.cell_x == (self.board.n_cells_X - 2 if self.is_top_level else self.board.n_cells_X - 1):
+        elif self.cell_x == (self.board.n_cells_X - 2 if self.is_top_level else self.board.n_cells_X - 1): # Si la carte est toute à droite
             side_removable = True
-        elif self.board.grid[self.level][self.cell_y][self.cell_x - 1] == 0:
+        elif self.board.grid[self.level][self.cell_y][self.cell_x - 1] == 0: # S'il n'y a pas de carte à gauche
             side_removable = True
-        elif self.board.grid[self.level][self.cell_y][self.cell_x + 1] == 0:
+        elif self.board.grid[self.level][self.cell_y][self.cell_x + 1] == 0: # S'il n'y a pas de carte à gauche
             side_removable = True
             
         top_removable = True

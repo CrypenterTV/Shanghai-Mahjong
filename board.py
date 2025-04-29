@@ -14,29 +14,11 @@ class Board:
 
         self.game = game
 
+        # Paramètres généraux
         self.score = 0
         self.timer = 0
         self.current_combo = 1
         self.remaining_shuffles = 3
-
-        self.last_score_update_time = time.time()
-        self.last_removed_time = 0
-        self.last_shuffle_animation_time = 0
-        self.last_idea_button_time = 0
-        self.last_solver_used_time = 0
-
-        self.filename = filename
-        self.grid = []
-        self.cards = []
-        self.selected_cards = []
-        self.n_cells_X = 0
-        self.n_cells_Y = 0
-
-
-        self.width_start = 0.1 * game.width
-        self.width_end = 0.9 * game.width
-        self.height_start = 0.1 * game.height
-        self.height_end = 0.9 * game.height
 
         self.shuffle_animation = 10
         self.removables_cards = 0
@@ -46,24 +28,47 @@ class Board:
         self.auto_solving = False
         self.auto_solving_deleting = False
 
+        # Gestion des évènements "temporels"
+        self.last_score_update_time = time.time()
+        self.last_removed_time = 0
+        self.last_shuffle_animation_time = 0
+        self.last_idea_button_time = 0
+        self.last_solver_used_time = 0
+
+        self.filename = filename
+
+        # Dimensions
+        self.width_start = 0.1 * game.width
+        self.width_end = 0.9 * game.width
+        self.height_start = 0.1 * game.height
+        self.height_end = 0.9 * game.height
+        self.n_cells_X = 0
+        self.n_cells_Y = 0
+
+        # Listes
+        self.grid = []
+        self.cards = []
+        self.selected_cards = []
         self.buttons = []
         self.particle_effects = []
         self.score_popups = []
         self.current_removables = []
 
+        # Gestion du "tapis" de jeu
         self.play_mat_rect = pygame.Rect(self.width_start - 3*self.game.level_offset, self.height_start - 2*self.game.level_offset, self.width_end - self.width_start + 5*self.game.level_offset, self.height_end - self.height_start + 4*self.game.level_offset)
         self.game.images.resize_play_mat_bg(self.width_end - self.width_start + 5*self.game.level_offset, self.height_end - self.height_start + 4*self.game.level_offset)
 
         self.current_card = None
 
-
-        if filename == None:
+        
+        if filename == None: # Génération d'une nouvelle grille avec les dimensions sélectionnées
             self.generate_grid(self.game.preferences.get_value("grid_size_z", 4),
                                self.game.preferences.get_value("grid_size_x", 13),
                                self.game.preferences.get_value("grid_size_y", 8))
         else:
-            board_helper.load_from_file(self, self.filename)
-            
+            board_helper.load_from_file(self, self.filename) # Sinon on la charge depuis le fichier
+        
+        # Analyse du board et calcul des dimensions
         self.analyse_board()
 
         self.card_width = (self.width_end + self.game.level_offset - self.width_start) / self.n_cells_X
@@ -129,6 +134,7 @@ class Board:
 
     def sound_button_action(self, button):
         self.game.mute_button_action()
+        # Changement des icones des boutons "mute"
         self.buttons[2].image = self.game.images.sound_off_icon if self.game.is_muted else self.game.images.sound_on_icon
         self.game.main_menu.buttons[3].image = self.game.images.sound_off_icon if self.game.is_muted else self.game.images.sound_on_icon
 
@@ -156,6 +162,7 @@ class Board:
         
         self.last_idea_button_time = current_time
 
+        # On fait perde 100 points de score au joueur
         self.score_popups.append(ScorePopup(int(self.game.width - self.game.width * 0.035), 
                                             int(self.game.height / 2 - self.game.width // 20), 
                                             "-100", 
@@ -168,6 +175,7 @@ class Board:
             if card.is_highlighted:
                 return
         
+        # On surligne une paire de cartes retirable
         pairs = self.get_removable_pairs()
 
         if len(pairs) > 0:
@@ -195,12 +203,20 @@ class Board:
             self.auto_solving = False
             return
 
+        """
+        Deux "modes" :
+            - Une itération sur deux on surligne les cartes à retirer
+            - L'itération suivante on supprime les cartes, et on recommence l'opération
+        """
 
         if self.auto_solving_deleting and len(self.selected_cards) == 2:
+            # Retrait des cartes
             self.remove_cards()
             self.auto_solving_deleting = False
         else:
 
+            # Sélection d'une nouvelle paire à surligner 
+            
             pair = self.current_removables.pop(0)
 
             self.selected_cards = [pair[0], pair[1]]
@@ -218,19 +234,24 @@ class Board:
         self.removables_cards = 0
 
         for c1 in self.cards:
+
             if not c1.is_removable():
                 continue
             self.removables_cards += 1
+
             for c2 in self.cards:
+
                 if c1 == c2:
                     continue
                 if not c2.is_removable():
                     continue
+
+                # Les cartes sont de même type et retirables
                 if c1.c_type == c2.c_type:
                     
-                    if removable_pairs.__contains__((c2, c1)):
+                    if removable_pairs.__contains__((c2, c1)): # On ajoute pas deux fois la même paire de cartes
                         continue
-
+                        
                     removable_pairs.append((c1, c2))
         
         return removable_pairs
@@ -238,6 +259,7 @@ class Board:
 
     def update(self):
 
+        # Animation 'shuffle'
         if self.current_animation:
 
             current_time = time.time()
@@ -292,6 +314,7 @@ class Board:
 
 
     def draw_score_popup(self, surface):
+
         popup_width, popup_height = 190, 100
         popup_x, popup_y = self.game.width - popup_width - 20, 10
 
@@ -361,6 +384,7 @@ class Board:
         if self.current_card.is_removable():
 
             if self.current_card.is_selected and self.selected_cards.__contains__(self.current_card):
+                # On déselectionne la carte
                 self.current_card.is_selected = False
                 self.selected_cards.remove(self.current_card)
             else:
@@ -372,36 +396,41 @@ class Board:
                 self.selected_cards.append(self.current_card)
 
                 if len(self.selected_cards) == 2:
+                    
 
-                    if self.selected_cards[0].c_type == self.selected_cards[1].c_type:
-
+                    if self.selected_cards[0].c_type == self.selected_cards[1].c_type: # La paire de carte est valide
+                        # On la retire
                         self.remove_cards()
 
                     else:
+                        # La paire de carte n'est pas valide, on retire la premire carte sélectionnée
                         self.selected_cards.pop(0).is_selected = False
 
 
     def remove_cards(self):
+
         x1, y1 = self.selected_cards[0].card_rect.center
         x2, y2 = self.selected_cards[1].card_rect.center
 
+        # Ajout des effets de particules sur les deux cartes
         self.particle_effects.append(ParticleEffect(x1, y1))
         self.particle_effects.append(ParticleEffect(x2, y2))
-
   
         self.selected_cards[0].delete()
         self.selected_cards[1].delete()
         self.selected_cards.clear()
         
-        self.game.sounds.click_sound.play()
+        self.game.sounds.click_sound.play() # Lancement du son
 
         actual_time = time.time()
 
         score_gain = 10
 
+        # Auto solveur activé => gain de score nul
         if self.auto_solving:
             score_gain = 0
 
+        # Calcul du multiplicateur de score en fonction du combo actuel
         if actual_time - self.last_removed_time < 3:
             self.current_combo += 1
             score_gain *= self.current_combo
@@ -410,6 +439,7 @@ class Board:
 
         self.score += 2 * score_gain
 
+        # Ajout des popups de score au dessus des deux cartes
         self.score_popups.append(ScorePopup(x1, y1, f"+{score_gain}", (255, 255, 0)))
         self.score_popups.append(ScorePopup(x2, y2, f"+{score_gain}", (255, 255, 0)))
 
@@ -417,11 +447,11 @@ class Board:
 
         self.current_removables = self.get_removable_pairs()
 
-        if len(self.cards) == 0:
+        if len(self.cards) == 0: # Plus de carte, lancement du fin de la partie
             self.ending = True
             return
 
-        if len(self.current_removables) == 0:
+        if len(self.current_removables) == 0: # S'il n'y a plus aucune paire retirable, on mélange le board
                         
             self.shuffle_board()
             self.current_animation = True
@@ -437,21 +467,24 @@ class Board:
     def analyse_board(self):
 
         assert len(self.grid) > 2 and len(self.grid[0]) > 0 and len(self.grid[0][0]) > 0
-
+        
+        # Calcul des dimensions de la grille
         self.n_cells_X = len(self.grid[0][0])
         self.n_cells_Y = len(self.grid[0])
 
         for i in range(len(self.grid)):
+            
+            # Vérification de la cohérence des dimensions
 
             current_2d = self.grid[i]
 
             x_to_check = self.n_cells_X
             y_to_check = self.n_cells_Y
 
-            if i == len(self.grid) - 1:
+            if i == len(self.grid) - 1: # Le niveau du haut est plus petit (-1 largeur, -1 hauteur)
                 x_to_check -= 1
                 y_to_check -= 1
-
+            
             if len(current_2d) != y_to_check:
                 raise Exception("La taille de la grille est incorrecte.")
             
@@ -466,6 +499,7 @@ class Board:
         positions = []
         cards_types = []
 
+        # Initialisation de la liste des cartes
         for level in range(len(self.grid)):
 
             for i in range(len(self.grid[level])):
@@ -479,25 +513,27 @@ class Board:
                         positions.append((level, i, j))
                         continue
                     
-                   
-                    self.cards.append(Card(self, self.grid[level][i][j], level, j, i))
+                    
+                    self.cards.append(Card(self, self.grid[level][i][j], level, j, i)) #Ajout de la carte
         
 
         if len(positions) == 0:
             return
 
+        # Génération des types de paires aléatoires
         for i in range(len(positions) // 2):
 
             card_type = random.randint(1, 38)
             cards_types.append(card_type)
             cards_types.append(card_type)
         
-        random.shuffle(cards_types)
+        random.shuffle(cards_types) # On mélange l'ordre des types de cartes
 
         for i in range(len(positions)):
 
             position = positions[i]
-
+            
+            # On applique le type à la carte
             self.grid[position[0]][position[1]][position[2]] = cards_types[i]
 
             self.cards.append(Card(self, cards_types[i], position[0], position[2], position[1]))
@@ -509,31 +545,38 @@ class Board:
     def generate_grid(self, n_levels, n_cells_X, n_cells_Y):
 
         self.grid = []
-        base_fill_ratio = 0.9
-        top_fill_ratio = 0.4
+
+        base_fill_ratio = 0.9 # Niveau 0 : presque entièrement rempli
+        top_fill_ratio = 0.4 # Plus haut niveau : moins rempli
         
         for level in range(n_levels):
+            # Prise en compte des dimensions réduites du dernier niveau
             level_width = n_cells_X - 1 if level == n_levels - 1 else n_cells_X
             level_height = n_cells_Y - 1 if level == n_levels - 1 else n_cells_Y
             self.grid.append([[0 for _ in range(level_width)] for _ in range(level_height)])
         
-        max_card_types = min(38, len(self.game.images.cards))
         card_type = 1
         
         for level in range(n_levels):
-            fill_ratio = base_fill_ratio - ((base_fill_ratio - top_fill_ratio) * (level / (n_levels - 1)))
-            num_cells = sum(len(row) for row in self.grid[level])
-            num_pairs = int((num_cells * fill_ratio) // 2)
+            fill_ratio = base_fill_ratio - ((base_fill_ratio - top_fill_ratio) * (level / (n_levels - 1))) # Calcul du ratio de remplissage
+
+            num_cells = sum(len(row) for row in self.grid[level]) # Nombre de cellules dans le niveau
+            num_pairs = int((num_cells * fill_ratio) // 2) # Nombre de paires à placer
+
             available_positions = []
-            
 
             for y in range(len(self.grid[level])):
                 for x in range(len(self.grid[level][y])):
                     if level == 0 or self.grid[level - 1][y][x] != 0:
+                        # Une cellule est disponible si :
+                            # - c’est le niveau 0
+                            # - ou si la cellule correspondante en dessous (niveau précédent) est occupée
                         available_positions.append((level, y, x))
             
+
             random.shuffle(available_positions)
             
+            # On place les cartes en fonction des positions disponibles.
             while len(available_positions) >= 2 and num_pairs > 0:
                 pos1 = available_positions.pop()
                 pos2 = available_positions.pop()
@@ -542,7 +585,7 @@ class Board:
                 self.grid[pos2[0]][pos2[1]][pos2[2]] = card_type
                 
                 card_type += 1
-                if card_type > max_card_types:
+                if card_type > len(self.game.images.cards):
                     card_type = 1
                 
                 num_pairs -= 1
@@ -553,7 +596,7 @@ class Board:
     
         self.shuffle_animation -= 1
 
-        if self.shuffle_animation == 0:
+        if self.shuffle_animation == 0: # On arrive à la fin de l'animation.
             self.shuffle_animation = 10
             self.current_animation = False
             return
@@ -562,6 +605,7 @@ class Board:
         cards = []
         positions = []
 
+        # On charge toutes les cartes et leurs positions associées dans deux tableaux liés
         for level in range(len(self.grid)):
             for y in range(self.n_cells_Y - 1 if level == len(self.grid) - 1 else self.n_cells_Y):
                 for x in range(self.n_cells_X - 1 if level == len(self.grid) - 1 else self.n_cells_X):
@@ -574,8 +618,9 @@ class Board:
                     cards.append(card)
                     positions.append((level, y, x))
 
-        random.shuffle(cards)
+        random.shuffle(cards) # On mélange l'ordre des cartes
 
+        # On associe chaque carte mélangée à une position
         for i in range(len(positions)):
             position = positions[i]
             self.grid[position[0]][position[1]][position[2]] = cards[i]
@@ -591,7 +636,7 @@ class Board:
             self.current_animation = False
             self.ending = True
 
-        # On relance un shuffle
+        # On relance un shuffle si aucune paire retirable n'apparaît
         if len(removable_pairs) == 0 and len(self.cards) > 0:
             self.shuffle_board()
             self.current_animation = True
