@@ -151,7 +151,7 @@ class SettingsMenu:
         text_rect3 = text_surface3.get_rect(center=(self.game.width // 2, self.game.height // 2))
         self.game.screen.blit(text_surface3, text_rect3)
 
-        text_surface4 = self.font_2.render(f"Hauteur Grille (Y) : {self.grid_size_y}", True, (255, 255, 255))
+        text_surface4 = self.font_2.render(f"Longueur Grille (Y) : {self.grid_size_y}", True, (255, 255, 255))
         text_rect4 = text_surface4.get_rect(center=(self.game.width // 2, self.game.height // 2 + self.game.height // 12))
         self.game.screen.blit(text_surface4, text_rect4)
 
