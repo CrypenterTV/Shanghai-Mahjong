@@ -104,6 +104,23 @@ C'est cette classe qui décide quelle "scène" actualiser et afficher en fonctio
 
     </div>
 
+    À chaque actualisation, on met également à jour les propriétés des cartes afin de déterminer celles qui se situent sous le curseur de souris du joueur. Cependant, dans la classe `Board`, on ne garde sélectionnée que la carte qui se situe sur l'étage le plus haut. En fonction des différentes propriétés d'une tuile, sa couleur d'affichage diffère.
+    ```python
+    def update(self):
+
+        if self.is_expired:
+            return
+        
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        self.inside_card = self.coord_x <= mouse_x <= self.coord_x + self.board.card_width 
+        and self.coord_y <= mouse_y <= self.coord_y + self.board.card_height
+
+        self.inside_card_side = self.polygon_path.contains_point((mouse_x, mouse_y))
+
+        self.is_hovered = self.inside_card or self.inside_card_side
+    ```
+
     J'ai également réalisé une fonctionnalité permettant d'exporter et d'importer des parties de Mahjong depuis (ou vers) un fichier texte. Le format est simple, les tuiles sont représentées par leur type respectif (entier de 1 à 38) et chaque étage est séparé d'un saut de ligne.
 
     <div style="font-size: 0.9em">
@@ -120,11 +137,101 @@ C'est cette classe qui décide quelle "scène" actualiser et afficher en fonctio
     1 0 8 17 0 23 0 30
     0 0 10 0 4 0 0 0
     ```
-    La fichier `board_helper` fournit deux fonctions <span style="color:darkblue;">load_from_file</span>() et <span style="color:darkblue;">export_to_file</span>() permettant de réaliser ces deux opérations.
+    La fichier `board_helper` fournit deux fonctions <span style="color:darkblue;">load_from_file</span>() et <span style="color:darkblue;">export_to_file</span>() qui permettent respectivement de charger la liste `grid` en créant des objets `Card` depuis le fichier texte et d'exporter cette même liste en respectant ce format. Si une erreur est détectée : par exemple une longueur invalide ou incohérente de ligne ou d'étage, une exception est levée.
 
     </div>
 
 -   ### C) Gestion des menus
 
-    
+    Une autre difficulté majeure du projet était de concevoir les différents menus du jeu de manière "responsive" en s'adaptant à la taille de la fenêtre. Comme pour chaque élément graphique du projet, chaque menu implémente les fonctions  <span style="color:darkblue;">update</span>() et <span style="color:darkblue;">draw</span>(). Les menus contiennent également une liste de boutons et un arrière plan à dessiner : toutes les distances, les tailles de boutons et les textes sont définies par rapport à la taille de la fenêtre, de telle sorte à ce que les proportions restent les mêmes peu importe ses dimensions.
 
+    <div align="center">
+        <table style="border: none;">
+            <tr>
+                <td align="center" style="border: none;">
+                    <h5 style="margin-bottom: 5px;">Menu Principal</h5>
+                    <img src="main_menu.png" alt="Image 1" width="95%"/>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div align="center">
+        <table style="border: none;">
+            <tr>
+                <td align="center" style="border: none;">
+                    <h5 style="margin-bottom: 5px;">Menu Paramètres</h5>
+                    <img src="parametres.png" alt="Image 1" width="90%"/>
+                </td>
+                <td align="center" style="border: none;">
+                    <h5 style="margin-bottom: 5px;">Menu Pause</h5>
+                    <img src="pause.png" alt="Image 2" width="100%"/>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div align="center">
+        <table style="border: none;">
+            <tr>
+                <td align="center" style="border: none;">
+                    <h5 style="margin-bottom: 5px;">Menu Fin de Partie</h5>
+                    <img src="end_menu.png" alt="Image 1" width="52%"/>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    Les boutons sont également actualisés à chaque frame afin de déterminer si le joueur passe sa souris sur l'un des boutons : dans ce cas la couleur d'affichage est modifiée et deux chevrons de sélection apparaissent des deux côtés.
+
+-   ### D) Éditeur de niveaux
+
+    J'ai aussi réalisé un éditeur de niveau accessible depuis le menu principal permettant au joueur de créer sa propre disposition de tuiles afin de lancer des parties de Majhong dessus. L'éditeur de niveau se présente de cette manière :
+
+    <div align="center">
+        <table style="border: none;">
+            <tr>
+                <td align="center" style="border: none;">
+                    <h5 style="margin-bottom: 5px;">Editeur de Niveaux</h5>
+                    <img src="editeur.png" alt="Image 1" width="95%"/>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    Un clic droit permet de poser une tuile et un clic gauche permet de supprimer celle qui est sélectionnée. La classe `LevelEditor` reprend une bonne partie du fonctionnement de `Board` notamment au niveau de l'affichage des tuiles.
+    Si le nombre de tuiles posé est pair, le joueur a alors la possibilité de sauvegarder le niveau créé dans un fichier en utilisant la même méthode <span style="color:darkblue;">export_to_file</span>() que précédemment. L'unique différence est que le type des tuiles n'est pas défini donc tous les tuiles sont représentées par -1 dans le fichier exporté :
+    ```
+    0 -1 -1 -1 -1 -1 -1 -1 0
+    -1 -1 -1 -1 -1 -1 -1 -1 -1
+    -1 -1 -1 -1 -1 -1 -1 -1 -1
+
+    0 0 -1 -1 -1 -1 -1 -1 0
+    0 -1 -1 -1 -1 -1 -1 -1 0
+    0 -1 -1 -1 -1 -1 -1 0 0
+
+    -1 0 -1 -1 0 -1 0 -1
+    0 0 -1 0 -1 0 0 0
+    ```
+
+    Lorsque le joueur charge un niveau où les types de tuiles ne sont pas définis, la méthode <span style="color:darkblue;">load_game_elements</span>() permet d'initialiser le niveau avec des paires de tuiles aléatoires correspondant aux positions définies.
+
+-   ### E) Gestion du score
+
+    Pour gérer le score de la partie, je n'ai pas souhaité utiliser la progression du timer de la partie bien qu'il aurait été possible de réduire le gain de score au fur et à mesure de l'avancemenent de la partie. J'ai basé le gain de score sur une mécanique de multiplicateur de "combos". Si le joueur parvient à trouver 2 paires de tuiles à retirer en 3 secondes alors la valeur de `current_combo` est incrémentée, dans le cas contraire elle retombe à 1. Le score est ainsi calculé de cette manière avec un multiplicateur de score en fonction du combo actuel :
+    ```python
+    score_gain = 10
+    # Auto solveur activé => gain de score nul
+    if self.auto_solving:
+        score_gain = 0
+    # Calcul du multiplicateur de score en fonction du combo actuel
+    if actual_time - self.last_removed_time < 3:
+        self.current_combo += 1
+        score_gain *= self.current_combo
+    else:
+        self.current_combo = 1
+    ```
+    Ce système incite le joueur à réflechir à des enchaînements de combinaisons avant de jouer pour marquer un maximum de points.
+
+
+## IV) Démonstration Vidéo
